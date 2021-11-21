@@ -130,3 +130,7 @@ dmypy.json
 
 # Models
 .models/
+
+*.zip
+Report.txt
+cnn_dcon_analysis.docx
