@@ -23,10 +23,10 @@ class VGG(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         for layer in self.features:
-          if layer._get_name()=='MaxPool2d':
-            x,_ = self.features(x)
-          else:
-            x =self.features(x)
+            if layer._get_name() == 'MaxPool2d':
+                x, _ = layers(x)
+            else:
+                x = layers(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.classifier(x)
@@ -34,11 +34,12 @@ class VGG(nn.Module):
 
 
 def make_layers(cfg, batch_norm=False):
-    layers,rev_layers = [],[]
+    layers, rev_layers = [], []
     in_channels = 3
     for v in cfg:
         if v == "M":
-            layers += [nn.MaxPool2d(kernel_size=2, stride=2,return_indices=True)]
+            layers += [nn.MaxPool2d(kernel_size=2,
+                                    stride=2, return_indices=True)]
             rev_layers += [nn.MaxUnpool2d(kernel_size=2, stride=2)]
         else:
             v = int(v)
@@ -47,9 +48,10 @@ def make_layers(cfg, batch_norm=False):
                 layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
             else:
                 layers += [conv2d, nn.ReLU(inplace=True)]
-            rev_layers+=[nn.ConvTranspose2d(v,in_channels,kernel_size=3, padding=1), nn.ReLU(inplace=True)]
+            rev_layers += [nn.ConvTranspose2d(v, in_channels,
+                                              kernel_size=3, padding=1), nn.ReLU(inplace=True)]
             in_channels = v
-    return nn.Sequential(*layers),nn.Sequential(*rev_layers)
+    return nn.Sequential(*layers), nn.Sequential(*rev_layers)
 
 
 vgg16_config = [64, 64, "M", 128, 128, "M", 256, 256,
@@ -60,9 +62,9 @@ vgg16 = VGG(*make_layers(vgg16_config))
 # Download VGG16 model file to path ./models/vgg16/model.pth
 state_dict = torch.load('./models/vgg16/model.pth')
 
-#Loading Parameters and initialize them for both forward and backward layers
-vgg16.load_state_dict(state_dict,strict=False)
-for i,j in zip(vgg16.features,vgg16.rev_features):
-  if i._get_name()=='Conv2d':
-    j.load_state_dict({'weight':i.weight,'bias':torch.zeros_like(j.bias)})
-
+# Loading Parameters and initialize them for both forward and backward layers
+vgg16.load_state_dict(state_dict, strict=False)
+for i, j in zip(vgg16.features, vgg16.rev_features):
+    if i._get_name() == 'Conv2d':
+        j.load_state_dict(
+            {'weight': i.weight, 'bias': torch.zeros_like(j.bias)})
